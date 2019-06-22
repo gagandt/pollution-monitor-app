@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Predict-Pollution</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  </head>
+
+  <body>
+
+    <div class='container-fluid'>
+      <h3 class="text-center">Predicted Value of Pollution for next timestamp</h3>
+        <table class="table">
+            <tr>
+                <th> PM 2.5(ug/m3) </th>
+                <th> PM 1.0(ug/m3) </th>
+                <th> PM 10(ug/m3) </th>
+                <th> CO(mg/m3) </th>
+                <th> SO2(ug/m3) </th>
+                <th> NO2(ug/m3) </th>
+                <th> O3(ug/m3) </th>
+                <th> T(degrees Celcius) </th>
+                <th> P(hPa) </th>
+                <th> Wind Speed(m/s) </th>
+                <th> Wind Direction </th>
+                <th> Humidity(%) </th>
+            </tr>
+            <tr>
+            {% for p in predict %}
+                <td>
+                    {{p}}
+                </td>
+            
+            {% endfor %}
+        </tr>
+        </table>
+    </div>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
+    </script>
+  </body>
+</html>
