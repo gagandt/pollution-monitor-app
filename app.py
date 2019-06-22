@@ -7,6 +7,12 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from twilio.rest import Client
+import keras
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import mean_squared_error
+from keras.models import Sequential
+from keras.layers import Dense, LSTM
 
 app = Flask(__name__)
 app.config.from_object(os.environ['APP_SETTINGS'])
@@ -266,26 +272,52 @@ def update_graph():
 
 @app.route("/predict")
 def predict():
-    air_quality = get_air_quality(x=1)[0]
-    print(air_quality)
-    co = air_quality['co']
-    so2 = air_quality['so2']
-    no2 = air_quality['no2']
-    pm_1_0 = air_quality['pm_1_0']
-    pm_2_5 = air_quality['pm_2_5']
-    pm_10 = air_quality['pm_10']
-    o3 = air_quality['o3']
-    t = air_quality['t']
-    h = air_quality['h']
-    p = air_quality['p']
-    ws = air_quality['ws']
-    wd = air_quality['wd']
-
-    pred = (round(pm_2_5*399/398,2), round(pm_1_0*498/499,2), round(pm_10*499/498,2), round(co*399/398,2), round(so2*499/498,2), round(no2*398/399,2), round(o3*198/199,2),
-            round(t*126/127,2), round(p*1009/1005,2), round(ws*1023/1021,2), (wd*5)%8 + 1, (h*3)%100)
-
-    print(pred)
-    return render_template('predict.html', predict=pred)
+    air_quality = get_air_quality(x=4)
+    co = [x['co'] for x in air_quality]
+    so2 = [x['so2'] for x in air_quality]
+    no2 = [x['no2'] for x in air_quality]
+    pm_1_0 = [x['pm_1_0'] for x in air_quality]
+    pm_2_5 = [x['pm_2_5'] for x in air_quality]
+    pm_10 = [x['pm_10'] for x in air_quality]
+    o3 = [x['o3'] for x in air_quality]
+    t = [x['t'] for x in air_quality]
+    h = [x['h'] for x in air_quality]
+    p = [x['p'] for x in air_quality]
+    ws = [x['ws'] for x in air_quality]
+    wd = [x['wd'] for x in air_quality]
+    dset = np.array((pm_2_5, pm_1_0, pm_10, co, so2, no2, o3, t, p, ws, wd, h)).T
+    dset[:,10] = dset[:,10].astype('int32') % 8 + 1
+    scaler = MinMaxScaler(feature_range=(0,1))
+    data = scaler.fit_transform(dset)
+    values = data
+    values = values[::-1]
+    x_test = values[-1]
+    x_test = x_test.reshape(1, x_test.shape[0])
+    
+    model = Sequential()
+    model.add(Dense(50, input_shape=(x_test.shape[1],)))
+    model.add(Dense(x_test.shape[1]))
+    model.compile(loss='mae', optimizer='adam')
+    model.load_weights('mlp.h5')
+    pred1 = model.predict(x_test)
+    x_test = values.reshape(1,values.shape[0], x_test.shape[1])
+    print("predictions successful")
+    model = Sequential()
+    model.add(LSTM(50, input_shape=(x_test.shape[1], x_test.shape[2])))
+    model.add(Dense(x_test.shape[2]))
+    print(x_test.shape)
+    print("predictions successful")
+    model.compile(loss='mae', optimizer='adam')
+    model.load_weights('lstm_pollution.h5')
+    print("predictions successful")
+    pred2 = model.predict(x_test)
+    
+    print("predictions successful")
+    pred = np.abs(0.5 * pred1 + 0.5 * pred2)
+    pred = scaler.inverse_transform(pred)
+    pred = np.round(pred, 2)
+    pred[0,10] = int(pred[0,10])
+    return render_template('predict.html', predict=pred[0])
 
 
 
