@@ -19,7 +19,7 @@ git clone https://github.com/user-name/pollution-monitor.git
 3. Enter the repository.
 
 ```console
-cd pollution-monitor
+cd pollution-monitor-app
 ```
 
 4. Create a python virtual environment with ```python=python3```.
